@@ -6,6 +6,7 @@
  * sspmod_multiauth_Auth_Source_MultiAuth class and call the
  * delegateAuthentication method on it.
  *
+ * @author Sixto Martin, Yaco Sistemas S.L.
  * @author Lorenzo Gil, Yaco Sistemas S.L.
  * @package simpleSAMLphp
  * @version $Id$
@@ -16,8 +17,12 @@ if (!array_key_exists('AuthState', $_REQUEST)) {
 }
 $authStateId = $_REQUEST['AuthState'];
 
+
+$loaConfiguration = SimpleSAML_Configuration::getConfig('module_accountLinking.php');
+$displayLoas =  $loaConfiguration->getBoolean('displayLoas', false);
+
 /* Retrieve the authentication state. */
-$state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_multiauth_Auth_Source_MultiAuth::STAGEID);
+$state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_accountLinking_Auth_Source_MultiAuth::STAGEID);
 
 if (array_key_exists("SimpleSAML_Auth_Default.id", $state)) {
 	$authId = $state["SimpleSAML_Auth_Default.id"];
@@ -31,21 +36,26 @@ if (array_key_exists('source', $_REQUEST)) {
 	if ($as !== NULL) {
 		$as->setPreviousSource($source);
 	}
-	sspmod_multiauth_Auth_Source_MultiAuth::delegateAuthentication($source, $state);
+	sspmod_accountLinking_Auth_Source_MultiAuth::delegateAuthentication($source, $state);
 } elseif (array_key_exists('multiauth:preselect', $state)) {
 	$source = $state['multiauth:preselect'];
-	sspmod_multiauth_Auth_Source_MultiAuth::delegateAuthentication($source, $state);
+	sspmod_accountLinking_Auth_Source_MultiAuth::delegateAuthentication($source, $state);
 }
 
 $globalConfig = SimpleSAML_Configuration::getInstance();
-$t = new SimpleSAML_XHTML_Template($globalConfig, 'multiauth:selectsource.php');
+$t = new SimpleSAML_XHTML_Template($globalConfig, 'accountLinking:selectsource.php');
 $t->data['authstate'] = $authStateId;
-$t->data['sources'] = $state[sspmod_multiauth_Auth_Source_MultiAuth::SOURCESID];
+$t->data['sources'] = $state[sspmod_accountLinking_Auth_Source_MultiAuth::SOURCESID];
 if ($as !== NULL) {
 	$t->data['preferred'] = $as->getPreviousSource();
 } else {
 	$t->data['preferred'] = NULL;
 }
+
+if ($displayLoas) {
+	$t->data['displayLoas'] = true;
+}
+
 $t->show();
 exit();
 

@@ -4,27 +4,28 @@
  * Authentication source which let the user chooses among a list of
  * other authentication sources
  *
+ * @author Sixto Martin, Yaco Sistemas S.L.
  * @author Lorenzo Gil, Yaco Sistemas S.L.
  * @package simpleSAMLphp
  * @version $Id$
  */
 
-class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
+class sspmod_accountLinking_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 
 	/**
 	 * The key of the AuthId field in the state.
 	 */
-	const AUTHID = 'sspmod_multiauth_Auth_Source_MultiAuth.AuthId';
+	const AUTHID = 'sspmod_accountLinking_Auth_Source_MultiAuth.AuthId';
 
 	/**
 	 * The string used to identify our states.
 	 */
-	const STAGEID = 'sspmod_multiauth_Auth_Source_MultiAuth.StageId';
+	const STAGEID = 'sspmod_accountLinking_Auth_Source_MultiAuth.StageId';
 
 	/**
 	 * The key where the sources is saved in the state.
 	 */
-	const SOURCESID = 'sspmod_multiauth_Auth_Source_MultiAuth.SourceId';
+	const SOURCESID = 'sspmod_accountLinking_Auth_Source_MultiAuth.SourceId';
 
 	/**
 	 * The key where the selected source is saved in the session.
@@ -35,6 +36,12 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 	 * Array of sources we let the user chooses among.
 	 */
 	private $sources;
+
+	/**
+	 * Array with the Account Linking configuration
+	 */
+
+	private $loaConfiguration;
 
 	/**
 	 * Constructor for this authentication source.
@@ -56,37 +63,54 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 		$globalConfiguration = SimpleSAML_Configuration::getInstance();
 		$defaultLanguage = $globalConfiguration->getString('language.default', 'en');
 		$authsources = SimpleSAML_Configuration::getConfig('authsources.php');
+		$this->loaConfiguration = SimpleSAML_Configuration::getConfig('module_accountLinking.php');
 		$this->sources = array();
+		$loas = $this->loaConfiguration->getArray('LoAs');
+		$defaultLoas = $this->loaConfiguration->getArray('default-LoAs');
+
 		foreach($config['sources'] as $source => $info) {
 
-			if (is_int($source)) { // Backwards compatibility 
-				$source = $info;
-				$info = array();
-			}
-
-			if (array_key_exists('text', $info)) {
-				$text = $info['text'];
-			} else {
-				$text = array($defaultLanguage => $source);
-			}
-
-			if (array_key_exists('css-class', $info)) {
-				$css_class = $info['css-class'];
-			} else {
-				/* Use the authtype as the css class */
-				$authconfig = $authsources->getArray($source, NULL);
-				if (!array_key_exists(0, $authconfig) || !is_string($authconfig[0])) {
-					$css_class = "";
-				} else {
-					$css_class = str_replace(":", "-", $authconfig[0]);
+				if (is_int($source)) { // Backwards compatibility 
+					$source = $info;
+					$info = array();
 				}
-			}
 
-			$this->sources[] = array(
-				'source' => $source,
-				'text' => $text,
-				'css_class' => $css_class,
-			);
+				if (array_key_exists('text', $info)) {
+					$text = $info['text'];
+				} else {
+					$text = array($defaultLanguage => $source);
+				}
+
+				if (array_key_exists('css-class', $info)) {
+					$css_class = $info['css-class'];
+				} else {
+					/* Use the authtype as the css class */
+					$authconfig = $authsources->getArray($source, NULL);
+					if (!array_key_exists(0, $authconfig) || !is_string($authconfig[0])) {
+						$css_class = "";
+					} else {
+						$css_class = str_replace(":", "-", $authconfig[0]);
+					}
+				}
+
+				$sourceData =  array(
+					'source' => $source,
+					'text' => $text,
+					'css_class' => $css_class,
+				);
+
+				if (isset($loas['auths']) && array_key_exists($source , $loas['auths'])) {
+					$loa = $loas['auths'][$source];
+				}
+				else if (isset($defaultLoas['auth'])) {
+					$loa = $defaultLoas['auth'];
+				}
+
+				if(isset($loa)) {
+					$sourceData['loa'] = $loa;
+				}
+
+				$this->sources[] = $sourceData;
 		}
 	}
 
@@ -106,6 +130,29 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 		assert('is_array($state)');
 
 		$state[self::AUTHID] = $this->authId;
+
+		if (array_key_exists('SPMetadata' , $state)) {
+			$spEntityId = $state['SPMetadata']['entityid'];
+			$loas = $this->loaConfiguration->getArray('LoAs');
+			$defaultLoas = $this->loaConfiguration->getArray('default-LoAs');
+			if (isset($loas['sps']) && array_key_exists($spEntityId , $loas['sps'])) {
+				$requiredLoa = $loas['sps'][$spEntityId];
+			}
+			else if (isset($defaultLoas['sp'])) {
+				$requiredLoa = $defaultLoas['sp'];
+			}
+		}
+
+		if (isset($requiredLoa)) {
+			$filtered_sources = array();
+			foreach ($this->sources as $source) {
+				if (isset($source['loa']) && ($requiredLoa <= $source['loa'])) {
+					$filtered_sources[] = $source;
+				}
+			}
+			$this->sources = $filtered_sources;
+		}
+
 		$state[self::SOURCESID] = $this->sources;
 
 		/* Save the $state array, so that we can restore if after a redirect */
@@ -113,7 +160,7 @@ class sspmod_multiauth_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source {
 
 		/* Redirect to the select source page. We include the identifier of the
 		saved state array as a parameter to the login form */
-		$url = SimpleSAML_Module::getModuleURL('multiauth/selectsource.php');
+		$url = SimpleSAML_Module::getModuleURL('accountLinking/selectsource.php');
 		$params = array('AuthState' => $id);
 
 		// Allowes the user to specify the auth souce to be used

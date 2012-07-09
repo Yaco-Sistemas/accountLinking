@@ -1,12 +1,12 @@
 <?php
-$this->data['header'] = $this->t('{multiauth:multiauth:select_source_header}');
+$this->data['header'] = $this->t('{accountLinking:multiauth:select_source_header}');
 
 $this->includeAtTemplateBase('includes/header.php');
 ?>
 
-<h2><?php echo $this->t('{multiauth:multiauth:select_source_header}'); ?></h2>
+<h2><?php echo $this->t('{accountLinking:multiauth:select_source_header}'); ?></h2>
 
-<p><?php echo $this->t('{multiauth:multiauth:select_source_text}'); ?></p>
+<p><?php echo $this->t('{accountLinking:multiauth:select_source_text}'); ?></p>
 
 <form action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="get">
 <input type="hidden" name="AuthState" value="<?php echo htmlspecialchars($this->data['authstate']); ?>" />
@@ -24,9 +24,15 @@ foreach($this->data['sources'] as $source) {
 		'value="' . htmlspecialchars($source['source']) . '">';
 	echo htmlspecialchars($this->t($source['text']));
 	echo '</button>';
+	if (isset($this->data['displayLoas'])) {
+		if (isset($source['loa'])) {
+			echo ' (Loa: '.$source['loa'].')';
+		}
+	}
 	echo '</li>';
 }
 ?>
 </ul>
 </form>
+
 <?php $this->includeAtTemplateBase('includes/footer.php'); ?>
