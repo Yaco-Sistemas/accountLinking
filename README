@@ -1,0 +1,7 @@
+Multi Auth - Account Linking - LoAs
+
+This module is a extension of the multiauth module with Account-Linking 
+and LoA functionalities. This module filters the sources presented to the
+user according to the requested level of authentication of the service
+provider, it allows the user to select from a variety of auth sources
+which are valid for accessing the resource requested.
