@@ -12,25 +12,33 @@ $this->includeAtTemplateBase('includes/header.php');
 <input type="hidden" name="AuthState" value="<?php echo htmlspecialchars($this->data['authstate']); ?>" />
 <ul>
 <?php
-foreach($this->data['sources'] as $source) {
-	echo '<li class="' . htmlspecialchars($source['css_class']) . ' authsource">';
-	if ($source['source'] === $this->data['preferred']) {
-		$autofocus = ' autofocus="autofocus"';
-	} else {
-		$autofocus = '';
-	}
-	echo '<button type="submit" name="source"' . $autofocus . ' ' .
-		'id="button-' . htmlspecialchars($source['source']) . '" ' .
-		'value="' . htmlspecialchars($source['source']) . '">';
-	echo htmlspecialchars($this->t($source['text']));
-	echo '</button>';
-	if (isset($this->data['displayLoas'])) {
-		if (isset($source['loa'])) {
-			echo ' (Loa: '.$source['loa'].')';
+
+if(!empty($this->data['sources'])) {
+
+	foreach($this->data['sources'] as $source) {
+		echo '<li class="' . htmlspecialchars($source['css_class']) . ' authsource">';
+		if ($source['source'] === $this->data['preferred']) {
+			$autofocus = ' autofocus="autofocus"';
+		} else {
+			$autofocus = '';
 		}
+		echo '<button type="submit" name="source"' . $autofocus . ' ' .
+			'id="button-' . htmlspecialchars($source['source']) . '" ' .
+			'value="' . htmlspecialchars($source['source']) . '">';
+		echo htmlspecialchars($this->t($source['text']));
+		echo '</button>';
+		if (isset($this->data['displayLoas'])) {
+			if (isset($source['loa'])) {
+				echo ' (Loa: '.$source['loa'].')';
+			}
+		}
+		echo '</li>';
 	}
-	echo '</li>';
 }
+else {
+	echo $this->t('{accountLinking:multiauth:no_source_available}');
+}
+
 ?>
 </ul>
 </form>

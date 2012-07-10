@@ -99,6 +99,7 @@ class sspmod_accountLinking_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source
 					'css_class' => $css_class,
 				);
 
+				$loa = NULL;
 				if (isset($loas['auths']) && array_key_exists($source , $loas['auths'])) {
 					$loa = $loas['auths'][$source];
 				}
@@ -146,7 +147,7 @@ class sspmod_accountLinking_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source
 		if (isset($requiredLoa)) {
 			$filtered_sources = array();
 			foreach ($this->sources as $source) {
-				if (isset($source['loa']) && ($requiredLoa <= $source['loa'])) {
+				if (isset($source['loa']) && ($source['loa'] >= $requiredLoa)) {
 					$filtered_sources[] = $source;
 				}
 			}

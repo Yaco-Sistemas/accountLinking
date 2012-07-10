@@ -48,5 +48,8 @@
 		"hu": "A kiv\u00e1lasztott azonos\u00edt\u00e1si met\u00f3dust kiv\u00e1lasztva azonos\u00edtani fogjuk, \u00e9s ki\u00e1ll\u00edtunk err\u0151l egy hiteles igazol\u00e1st.",
 		"ar": "\u0645\u0635\u062f\u0631\u062a\u0648\u062b\u064a\u0642\u0643 \u0627\u0644\u0645\u062e\u062a\u0627\u0631 \u0633\u064a\u0633\u062a\u062e\u062f\u0645 \u0644\u062a\u0635\u062f\u064a\u0642 \u062f\u062e\u0648\u0644\u0643 ",
 		"id": "Sumber autentifikasi terpilih akan digunakan untuk mengautentifikasi Anda dan membuat sebuah session yang valid."
+	},
+	"no_source_available": {
+		"es": "No hay ninguna fuente para autenticarse disponible"
 	}
 }

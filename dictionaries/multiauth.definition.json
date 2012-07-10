@@ -4,5 +4,8 @@
 	},
 	"select_source_text": {
 		"en": "The selected authentication source will be used to authenticate you and and to create a valid session."
+	},
+	"no_source_available": {
+		"en": "No authentication source available"
 	}
 }
