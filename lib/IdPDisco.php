@@ -21,7 +21,8 @@ class sspmod_accountLinking_IdPDisco extends SimpleSAML_XHTML_IdPDisco {
 
 		$loaConfiguration = SimpleSAML_Configuration::getConfig('module_accountLinking.php');
 		$loas = $loaConfiguration->getArray('LoAs');
-		$defaultLoas = $loaConfiguration->getArray('default-LoAs');		
+		$defaultLoas = $loaConfiguration->getArray('default-LoAs');
+		$disableNonCompliance = $loaConfiguration->getBoolean('disable-non-compliance', TRUE);
 
 		$idpList = array();
 		foreach ($this->metadataSets AS $metadataSet) {
@@ -32,34 +33,6 @@ class sspmod_accountLinking_IdPDisco extends SimpleSAML_XHTML_IdPDisco {
 			 * two metadata sets have the same entity.
 			 */
 			$idpList = array_merge($newList, $idpList);
-		}
-
-
-		// Calculate the original spEntityid
-		
-		$url = urldecode($_REQUEST['return']);
-		$data_url = parse_url($url);
-		$query = $data_url['query'];
-
-		$split1 = explode('spentityid=', $query);
-		$spUrl = urldecode($split1[1]);
-		$split2 = explode('&cookieTime', $spUrl);
-		$spEntityid = $split2[0];
-
-		$metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();
-
-		$spMetadataList = $metadata->getList('saml20-sp-remote');
-
-		if (!array_key_exists($spEntityid, $spMetadataList)) {
-			// If a valid spEntityid was not found,  I use the local SP
-			$spEntityid = $this->spEntityId;
-		}
-
-		if (isset($loas['sps']) && array_key_exists($spEntityid , $loas['sps'])) {
-			$requiredLoa = $loas['sps'][$spEntityid];
-		}
-		else if (isset($defaultLoas['sp'])) {
-			$requiredLoa = $defaultLoas['sp'];
 		}
 
 		foreach ($idpList as $key => &$idp) {
@@ -76,10 +49,38 @@ class sspmod_accountLinking_IdPDisco extends SimpleSAML_XHTML_IdPDisco {
 			$idp['loa'] = $loa;
 		}
 
-		if (isset($requiredLoa)) {
-			foreach ($idpList as $key => &$idp) {
-				if (!isset($idp['loa']) || ($idp['loa'] < $requiredLoa)) {
-					unset($idpList[$key]);
+		if ($disableNonCompliance) {
+			// Calculate the original spEntityid
+			$url = urldecode($_REQUEST['return']);
+			$data_url = parse_url($url);
+			$query = $data_url['query'];
+
+			$split1 = explode('spentityid=', $query);
+			$spUrl = urldecode($split1[1]);
+			$split2 = explode('&cookieTime', $spUrl);
+			$spEntityid = $split2[0];
+
+			$metadata = SimpleSAML_Metadata_MetaDataStorageHandler::getMetadataHandler();
+
+			$spMetadataList = $metadata->getList('saml20-sp-remote');
+
+			if (!array_key_exists($spEntityid, $spMetadataList)) {
+				// If a valid spEntityid was not found,  I use the local SP
+				$spEntityid = $this->spEntityId;
+			}
+
+			if (isset($loas['sps']) && array_key_exists($spEntityid , $loas['sps'])) {
+				$requiredLoa = $loas['sps'][$spEntityid];
+			}
+			else if (isset($defaultLoas['sp'])) {
+				$requiredLoa = $defaultLoas['sp'];
+			}
+
+			if (isset($requiredLoa)) {
+				foreach ($idpList as $key => &$idp) {
+					if (!isset($idp['loa']) || ($idp['loa'] < $requiredLoa)) {
+						unset($idpList[$key]);
+					}
 				}
 			}
 		}
@@ -162,7 +163,7 @@ class sspmod_accountLinking_IdPDisco extends SimpleSAML_XHTML_IdPDisco {
 		$t->data['rememberenabled'] = $this->config->getBoolean('idpdisco.enableremember', FALSE);
 
 		$loaConfiguration = SimpleSAML_Configuration::getConfig('module_accountLinking.php');
-		$displayLoas =  $loaConfiguration->getBoolean('displayLoas', false);
+		$displayLoas =  $loaConfiguration->getBoolean('display-Loas', false);
 
 		if ($displayLoas) {
 			$t->data['displayLoas'] = true;

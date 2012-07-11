@@ -19,7 +19,7 @@ $authStateId = $_REQUEST['AuthState'];
 
 
 $loaConfiguration = SimpleSAML_Configuration::getConfig('module_accountLinking.php');
-$displayLoas =  $loaConfiguration->getBoolean('displayLoas', false);
+$displayLoas =  $loaConfiguration->getBoolean('display-Loas', false);
 
 /* Retrieve the authentication state. */
 $state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_accountLinking_Auth_Source_MultiAuth::STAGEID);

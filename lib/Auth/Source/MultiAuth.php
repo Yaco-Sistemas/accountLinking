@@ -132,26 +132,30 @@ class sspmod_accountLinking_Auth_Source_MultiAuth extends SimpleSAML_Auth_Source
 
 		$state[self::AUTHID] = $this->authId;
 
-		if (array_key_exists('SPMetadata' , $state)) {
-			$spEntityId = $state['SPMetadata']['entityid'];
-			$loas = $this->loaConfiguration->getArray('LoAs');
-			$defaultLoas = $this->loaConfiguration->getArray('default-LoAs');
-			if (isset($loas['sps']) && array_key_exists($spEntityId , $loas['sps'])) {
-				$requiredLoa = $loas['sps'][$spEntityId];
-			}
-			else if (isset($defaultLoas['sp'])) {
-				$requiredLoa = $defaultLoas['sp'];
-			}
-		}
+		$disableNonCompliance = $loaConfiguration->getBoolean('disable-non-compliance', TRUE);
 
-		if (isset($requiredLoa)) {
-			$filtered_sources = array();
-			foreach ($this->sources as $source) {
-				if (isset($source['loa']) && ($source['loa'] >= $requiredLoa)) {
-					$filtered_sources[] = $source;
+		if ($disableNonCompliance) {
+			if (array_key_exists('SPMetadata' , $state)) {
+				$spEntityId = $state['SPMetadata']['entityid'];
+				$loas = $this->loaConfiguration->getArray('LoAs');
+				$defaultLoas = $this->loaConfiguration->getArray('default-LoAs');
+				if (isset($loas['sps']) && array_key_exists($spEntityId , $loas['sps'])) {
+					$requiredLoa = $loas['sps'][$spEntityId];
+				}
+				else if (isset($defaultLoas['sp'])) {
+					$requiredLoa = $defaultLoas['sp'];
 				}
 			}
-			$this->sources = $filtered_sources;
+
+			if (isset($requiredLoa)) {
+				$filtered_sources = array();
+				foreach ($this->sources as $source) {
+					if (isset($source['loa']) && ($source['loa'] >= $requiredLoa)) {
+						$filtered_sources[] = $source;
+					}
+				}
+				$this->sources = $filtered_sources;
+			}
 		}
 
 		$state[self::SOURCESID] = $this->sources;
