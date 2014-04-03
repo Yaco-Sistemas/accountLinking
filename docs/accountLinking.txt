@@ -38,12 +38,14 @@ authentication source:
                     'es' => 'Entrar usando un SP SAML',
                 ),
                 'css-class' => 'SAML',
+                'loa' => 2,
             ),
             'example-admin' => array(
                 'text' => array(
                     'en' => 'Log in using the admin password',
                     'es' => 'Entrar usando la contraseña de administrador',
                 ),
+                'loa' => 1,
             ),
         ),
     ),
